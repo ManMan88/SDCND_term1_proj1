@@ -1,53 +1,79 @@
-#**Finding Lane Lines on the Road** 
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
+# **Finding Lane Lines on the Road** 
 
-<img src="examples/laneLines_thirdPass.jpg" width="480" alt="Combined Image" />
+## Writeup - Ron Danon
 
-Overview
+**Finding Lane Lines on the Road**
+
+The goals / steps of this project are the following:  
+* Make a pipeline that finds lane lines on the road  
+* Reflect on your work in a written report
+
+
+[//]: # (Image References)
+
+[image1]: ./test_images_output/colorThreshold_solidWhiteCurve.jpg
+[image2]: ./test_images_output/gray_solidWhiteCurve.jpg
+[image3]: ./test_images_output/blur_solidWhiteCurve.jpg
+[image4]: ./test_images_output/edges_solidWhiteCurve.jpg
+[image5]: ./test_images_output/maskedEdges_solidWhiteCurve.jpg
+[image6]: ./test_images_output/lines_solidWhiteCurve.jpg
+[image7]: ./test_images_output/final_solidWhiteCurve.jpg
+
 ---
 
-When we drive, we use our eyes to decide where to go.  The lines on the road that show us where the lanes are act as our constant reference for where to steer the vehicle.  Naturally, one of the first things we would like to do in developing a self-driving car is to automatically detect lane lines using an algorithm.
+### Reflection
 
-In this project you will detect lane lines in images using Python and OpenCV.  OpenCV means "Open-Source Computer Vision", which is a package that has many useful tools for analyzing images.  
+### 1. Summary of my pipeline.
 
-To complete the project, two files will be submitted: a file containing project code and a file containing a brief write up explaining your solution. We have included template files to be used both for the [code](https://github.com/udacity/CarND-LaneLines-P1/blob/master/P1.ipynb) and the [writeup](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md).The code file is called P1.ipynb and the writeup template is writeup_template.md 
+My pipeline is consisted of 7 image processing steps.  
+The methods which were applied to each image in chronological order are:  
+	a. Colors threshold - ignoring some pixels based on their RGB values.  
+	b. Convert colors threshold image to gray scale.  
+	c. Applying gaussian filter on gray scale image.  
+	d. Using Canny method to find image edges on the filtered image.
+	e. Masking the edges image to the interest area.    
+	f. Using Hough transform method on the masked edges image to find straight lines.  
+	g. Converting the lines to a two single lines on the left and right lanes (applied with the finalLines function - I didn't modify the draw_lines() function).  
 
-To meet specifications in the project, take a look at the requirements in the [project rubric](https://review.udacity.com/#!/rubrics/322/view)
+The parameters of each method were chosen at first with the help of slider widgets in order to save time. The parameters were chosen with the combination of logic and trial and error. Then the parameters were fine-tuned in order to yeild better results for the videos.  
+
+(Note: The mask parameters were tuned first, but the mask was applied only after the Canny method).  
+
+Most of the image processing methods parameters are based on the image shape so they would fit any image resolution.
+
+#### Explanation of the lines convertion
+The slope of each Hough line was calculated. Assuming the two lane lines will always have one positive slope line and one negetive slope line and that they will always be in a simillar posture,  only the lines with a slope between -0.5 and -2 or 0.5 and 2 were taken into acount. Then the mean slope (for each line - positive and negative) was calculated.  
+The yMax of the two lines was set to be at the bottom of the image. The yMin of the two lines was set to be the minimum of all of the y values of the Hough lines that were found.  
+All we miss now is x0 and x1 of each lane line.  
+For the positive slope line, an array of possible x1 values was calculated by using the array of x0 values of the positive slope Hough lines, then the x1 was taken as the mean of that array. Lastly, x0 was calculated using all the other data (slope, yMin = y0, yMax = y1, and x1).  
+Simillarly, the negetive slope line was found, but first x0 was found and then x1.
+
+Here are images showing the procedure of the pipeline:  
+a.![alt text][image1]  
+b.![alt text][image2]  
+c.![alt text][image3]  
+d.![alt text][image4]  
+e.![alt text][image5]  
+f.![alt text][image6]  
+g.![alt text][image7]  
 
 
-Creating a Great Writeup
----
-For this project, a great writeup should provide a detailed response to the "Reflection" section of the [project rubric](https://review.udacity.com/#!/rubrics/322/view). There are three parts to the reflection:
+### 2. Identify potential shortcomings with your current pipeline
 
-1. Describe the pipeline
+Some shortcoming I though of are:  
 
-2. Identify any shortcomings
-
-3. Suggest possible improvements
-
-We encourage using images in your writeup to demonstrate how your pipeline works.  
-
-All that said, please be concise!  We're not looking for you to write a book here: just a brief description.
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup. Here is a link to a [writeup template file](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md). 
+a. Some very different lane color should cause problems (for example red).  
+b. If the car is making a turn, or for some reason is not aligned with the lanes, the slope of the line will probably go out of y difined range of slopes.  
+c. A strong curve in the road can cause problems with the straight lines detection (for the specific parameters i chose).  
+d. Any dirt on the lines (like snow, or sand) will prevent line detection.  
+e. Near by cars in the front of the camera, or cars that change lanes can prevent line detection.  
 
 
-The Project
----
+### 3. Suggest possible improvements to your pipeline
 
-## If you have already installed the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) you should be good to go!   If not, you should install the starter kit to get started on this project. ##
+Some improvements I though of are: 
 
-**Step 1:** Set up the [CarND Term1 Starter Kit](https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/83ec35ee-1e02-48a5-bdb7-d244bd47c2dc/lessons/8c82408b-a217-4d09-b81d-1bda4c6380ef/concepts/4f1870e0-3849-43e4-b670-12e6f2d4b7a7) if you haven't already.
-
-**Step 2:** Open the code in a Jupyter Notebook
-
-You will complete the project code in a Jupyter notebook.  If you are unfamiliar with Jupyter Notebooks, check out <A HREF="https://www.packtpub.com/books/content/basics-jupyter-notebook-and-python" target="_blank">Cyrille Rossant's Basics of Jupyter Notebook and Python</A> to get started.
-
-Jupyter is an Ipython notebook where you can run blocks of code and see results interactively.  All the code for this project is contained in a Jupyter notebook. To start Jupyter in your browser, use terminal to navigate to your project directory and then run the following command at the terminal prompt (be sure you've activated your Python 3 carnd-term1 environment as described in the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) installation instructions!):
-
-`> jupyter notebook`
-
-A browser window will appear showing the contents of the current directory.  Click on the file called "P1.ipynb".  Another browser window will appear displaying the notebook.  Follow the instructions in the notebook to complete the project.  
-
-**Step 3:** Complete the project and submit both the Ipython notebook and the project writeup
-
+a. Averaging the current found line with the previous line (kind of filtering on the calculated lane line).  
+b. In cases were no lane line is found, use the last found lane line.  
+c. Using more conservative parameters (i.e. less Hough lines would be found). If no lane lines found, then use less conservative paramaeters... continue until the lane lines are found or until reached the finale parameters set.  
+d. Adjusting the parameters on the fly based on the found lane lines. For example, nurrowing the slope range, addjusting the colors thresholds, changing he mask area, etc.  
